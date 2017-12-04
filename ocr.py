@@ -5,18 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ann import HyperParameters, ANN, sigmoid, sigmoid_der
 
-from featurizer import featurize
+from featurizer import featurize, one_hot_encoder
 from validator import Validator, Result
 
 def load_train():
     mndata = MNIST("./data/mnist/")
     return mndata.load_training()
-
-def one_hot_encoder(a):
-    length = len(a)
-    b = np.zeros( (length, 10) )
-    b[np.arange(length), a] = 1
-    return b
 
 def convert_prob_to_label(y):
     return np.argmax(y, axis=1).reshape( (len(y), 1) )
@@ -25,9 +19,7 @@ def build_model(topology, hyperparams, batch_size, epoch, X_train, Y_train):
     ann = ANN(topology, hyperparams, sigmoid, sigmoid_der, epoch=epoch)
     print("training using mini batch GD...")
     costs = ann.train_in_batch(X_train, Y_train, batch_size)
-    plt.plot(costs)
-    plt.show()
-    return ann
+    return ann, costs
 
 def evaluate_model(model, num_classes, X_test, Y_test):
     predicted = model.predict(X_test)
@@ -76,11 +68,13 @@ def main():
     Y_test = np.array(labels[ train_size:N])
     Y_test = one_hot_encoder(Y_test)
 
-    hyperparams = HyperParameters(0.01, 0.01)
-    topology = [X_train[0].shape[0], 150, 10]
+    hyperparams = HyperParameters(0.03, 0.01)
+    topology = [X_train[0].shape[0], 300, 10]
     batch_size = 250
     epoch = 50
-    model = build_model(topology, hyperparams, batch_size, epoch, X_train, Y_train)
+    model, costs = build_model(topology, hyperparams, batch_size, epoch, X_train, Y_train)
+    plt.plot(costs)
+    plt.show()
 
     result = evaluate_model(model, 10, X_test, Y_test)
 

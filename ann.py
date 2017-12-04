@@ -38,6 +38,10 @@ class ANN:
         self.synapses = [ 2*np.random.random( size ).astype('f') - 1 for size in zip(topology[:-1], topology[1:]) ]
 
     def train_in_batch(self, X_train_whole, Y_train_whole, batch_size):
+        """
+            The entry point for training the ann.
+            It slices the whole training set into batches.
+        """
         i, k = 0, 0
         size = len(X_train_whole)
         costs = []
@@ -49,8 +53,13 @@ class ANN:
         return costs
 
     def train(self, X_train, Y_train):
+        """
+            mini-batch training
+        """
         n = len(X_train)
         costs = []
+
+        # to keep track of dw and db for using momentum
         delta_synapses = [ np.zeros(synapse.shape).astype('f') for synapse in self.synapses ]
         delta_biases = [ np.zeros(bias.shape).astype('f') for bias in self.biases ]
         for i in range(self.epoch):
@@ -58,7 +67,7 @@ class ANN:
             cache_z = [X_train] + cache_z
             grad_synapses, grad_biases, cost = self.backpropagate(Y_train, cache_y, cache_z)
 
-            # dw = - eta * gradient_w
+            # dw = - eta * gradient_w - momentum * previous_dw
             # w += dw
             for i, synapse in enumerate(self.synapses):
                 delta_synapses[i] = -1/n * self.hyperparams.alpha * grad_synapses[i] \
@@ -68,20 +77,6 @@ class ANN:
                 self.synapses[i] = synapse + delta_synapses[i]
                 self.biases[i] = self.biases[i] + delta_biases[i]
             costs.append(cost)
-
-        """
-        Z, cache_y, cache_z = self.feed_forward(X_train)
-        cache_z = [X_train] + cache_z
-        grad_synapses, grad_biases, cost = self.backpropagate(Y_train, cache_y, cache_z)
-
-        # dw = - eta * gradient_w
-        for i, synapse in enumerate(self.synapses):
-            delta_biases = -1/n * self.hyperparams.alpha * np.sum(grad_biases[i], axis=0)
-            delta_synapses = -1/n * self.hyperparams.alpha * grad_synapses[i]
-            self.synapses[i] = synapse + delta_synapses
-            self.biases[i] = self.biases[i] + delta_biases
-        """
-
         return np.mean(costs)
 
     def predict(self, X):
@@ -172,7 +167,6 @@ class ANN:
                 (Z-T)
         """
         return -target + predicted
-
 
 
 def test_ann():

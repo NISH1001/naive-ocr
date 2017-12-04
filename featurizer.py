@@ -4,8 +4,6 @@ import numpy as np
 from PIL import Image, ImageOps
 
 BASEWIDTH = 28
-BASE_PATH = "data/"
-THRESHOLD_VALUE = 254
 
 def resize(img):
     wpercent = ( BASEWIDTH / float(img.size[0]) )
@@ -14,11 +12,6 @@ def resize(img):
 
 def binarize(img):
     return img.convert('L')
-
-def convert_img_to_array(img):
-    img_data = np.asarray(img)
-    threshold_data = (img_data > THRESHOLD_VALUE ) * 1.0
-    return threshold_data.flatten()
 
 def load_image(filename):
     return Image.open(filename)
@@ -33,6 +26,11 @@ def featurize(filename):
     data = data.reshape( (1, BASEWIDTH*BASEWIDTH) )
     return data
 
+def one_hot_encoder(a):
+    length = len(a)
+    b = np.zeros( (length, 10) )
+    b[np.arange(length), a] = 1
+    return b
 
 def main():
     test = featurize("data/test.jpg")
