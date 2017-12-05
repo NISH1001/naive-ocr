@@ -41,17 +41,19 @@ def run():
     train_size = 41000
     eval_size = N-train_size
     X_train = np.array(images[0 : train_size])
+    #X_train = X_train/255
     Y_train = np.array(labels[0 : train_size])
     Y_train = one_hot_encoder(Y_train)
     X_eval = np.array(images[train_size:N])
+    #X_eval = X_eval/255
     Y_eval = np.array(labels[train_size:N])
     Y_eval = one_hot_encoder(Y_eval)
 
 
-    hyperparams = HyperParameters(0.04, 0.01)
-    topology = [X_train[0].shape[0], 500, 10]
-    batch_size = 150
-    epoch = 50
+    hyperparams = HyperParameters(0.1, 0.5)
+    topology = [X_train[0].shape[0], 100, 10]
+    batch_size = 400
+    epoch = 100
     model, costs = build_model(topology, hyperparams, batch_size, epoch, X_train, Y_train)
     plt.plot(costs)
     plt.show()
@@ -68,6 +70,7 @@ def run():
 
     X_test = load_test("data/test.csv")
     X_test = np.array(X_test)
+    #X_test = X_test/255
     predicted = model.predict(X_test)
     predicted_label = convert_prob_to_label(predicted)
     predicted = np.ravel(predicted_label)

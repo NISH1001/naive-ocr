@@ -10,6 +10,52 @@ def sigmoid_der(x):
     sig = sigmoid(x)
     return sig * (1-sig)
 
+def tanh(x):
+    return np.tanh(x)
+
+def tanh_der(x):
+    y = tanh(x)
+    return 1 -  y*y
+
+def softmax(x):
+    e = np.exp(x - np.amax(x))
+    return e / np.sum(e)
+
+def softmax_der(x):
+    y = softmax_generalized(x)
+    return y * (1-y)
+
+def softmax_generalized(x, theta = 1.0, axis = 1):
+    """
+        With axis=1, apply softmax for each row
+    """
+    # make X at least 2d
+    y = np.atleast_2d(x)
+
+    # find axis
+    if axis is None:
+        axis = next(j[0] for j in enumerate(y.shape) if j[1] > 1)
+
+    # multiply y against the theta parameter,
+    y = y * float(theta)
+
+    # subtract the max for numerical stability
+    y = y - np.expand_dims(np.max(y, axis = axis), axis)
+
+    # exponentiate y
+    y = np.exp(y)
+
+    # take the sum along the specified axis
+    ax_sum = np.expand_dims(np.sum(y, axis = axis), axis)
+
+    # finally: divide elementwise
+    p = y / ax_sum
+
+    # flatten if X was 1D
+    if len(x.shape) == 1: p = p.flatten()
+
+    return p
+
 class HyperParameters:
     def __init__(self, alpha, momentum=0):
         self.alpha = alpha
@@ -24,11 +70,19 @@ class ANN:
             z   :   activated output -> activate(y)
     """
 
-    def __init__(self, topology, hyperparams, activation, activation_der, epoch = 200):
+    def __init__(self, topology, hyperparams, activation_hidden,
+                 activation_der_hidden,
+                 activation_output,
+                 activation_der_output,
+                 epoch = 200
+            ):
         self.hyperparams = hyperparams
-        self.activation = activation
-        self.activation_der = activation_der
+        self.activation_hidden = activation_hidden
+        self.activation_der_hidden = activation_der_hidden
+        self.activation_output = activation_output
+        self.activation_der_output = activation_der_output
         self.epoch = epoch
+        self.rate_decay = 0.001
         self._init_synapses(topology)
 
     def _init_synapses(self, topology):
@@ -46,10 +100,14 @@ class ANN:
         size = len(X_train_whole)
         costs = []
         for i, k in enumerate(range(0, size, batch_size)):
+            print("Learning rate ==> {}".format(self.hyperparams.alpha))
             cost =  self.train(X_train_whole[k : k + batch_size],
                                Y_train_whole[k : k + batch_size])
             print("Batch ==> {} ::: Cost ==> {} ".format(i, cost))
             costs.append(cost)
+            learning_rate = self.hyperparams.alpha
+            learning_rate = learning_rate * (learning_rate / (learning_rate + (learning_rate * self.rate_decay)))
+            self.hyperparams.alpha = learning_rate
         return costs
 
     def train(self, X_train, Y_train):
@@ -90,12 +148,21 @@ class ANN:
         inp = X
         cache_y = []
         cache_z = []
-        for synapse, bias in zip(self.synapses, self.biases):
+
+        # process for hidden layers
+        for synapse, bias in zip(self.synapses[:-1], self.biases[:-1]):
             Y = np.dot(inp, synapse) + bias
             cache_y.append(Y)
-            Z = self.activation(Y)
+            Z = self.activation_hidden(Y)
             cache_z.append(Z)
             inp = Z
+
+        # process for output layer
+        Y = np.dot(inp, self.synapses[-1]) + self.biases[-1]
+        cache_y.append(Y)
+        Z = self.activation_output(Y)
+        cache_z.append(Z)
+        inp = Z
         return inp, cache_y, cache_z
 
     def backpropagate(self, Y_train, cache_y, cache_z):
@@ -120,14 +187,14 @@ class ANN:
         errors = self.cost_der(Y_train, Z)
         #cost = np.sum(errors**2) / len(errors)
         cost = self.calculate_cost(Y_train, Z)
-        delta = errors * self.activation_der(cache_y[-1])
+        delta = errors * self.activation_der_output(cache_y[-1])
 
         grad_biases[-1] = delta
         grad_synapses[-1] = np.dot(cache_z[-2].T, delta)
 
         for l in range(2, len(self.topology)):
             Y = cache_y[-l]
-            der = self.activation_der(Y)
+            der = self.activation_der_hidden(Y)
             delta = np.dot(delta, self.synapses[-l+1].T) * der
             grad_biases[-l] = delta
             grad_synapses[-l] = np.dot(cache_z[-l-1].T, delta)
@@ -155,7 +222,8 @@ class ANN:
 
 
     def cross_entropy_der(self, target, predicted):
-        return -( (target/predicted) - (1-target)/(1-predicted)  )
+        #return -( (target/predicted) - (1-target)/(1-predicted)  )
+        return - (target - predicted) / ( predicted * (1-predicted) )
 
     def lse_der(self, target, predicted):
         """

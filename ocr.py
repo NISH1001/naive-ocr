@@ -3,7 +3,7 @@
 from mnist import MNIST
 import numpy as np
 import matplotlib.pyplot as plt
-from ann import HyperParameters, ANN, sigmoid, sigmoid_der
+from ann import HyperParameters, ANN, sigmoid, sigmoid_der, tanh, tanh_der, softmax_generalized, softmax_der
 
 from featurizer import featurize, one_hot_encoder
 from validator import Validator, Result
@@ -16,7 +16,12 @@ def convert_prob_to_label(y):
     return np.argmax(y, axis=1).reshape( (len(y), 1) )
 
 def build_model(topology, hyperparams, batch_size, epoch, X_train, Y_train):
-    ann = ANN(topology, hyperparams, sigmoid, sigmoid_der, epoch=epoch)
+    #ann = ANN(topology, hyperparams, sigmoid, sigmoid_der, sigmoid, sigmoid_der, epoch=epoch)
+    ann = ANN(topology, hyperparams,
+              sigmoid, sigmoid_der,
+              softmax_generalized, softmax_der,
+              epoch=epoch
+            )
     print("training using mini batch GD...")
     costs = ann.train_in_batch(X_train, Y_train, batch_size)
     return ann, costs
