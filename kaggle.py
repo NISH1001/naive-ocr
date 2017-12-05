@@ -48,9 +48,9 @@ def run():
     Y_eval = one_hot_encoder(Y_eval)
 
 
-    hyperparams = HyperParameters(0.03, 0.01)
-    topology = [X_train[0].shape[0], 300, 10]
-    batch_size = 200
+    hyperparams = HyperParameters(0.04, 0.01)
+    topology = [X_train[0].shape[0], 500, 10]
+    batch_size = 150
     epoch = 50
     model, costs = build_model(topology, hyperparams, batch_size, epoch, X_train, Y_train)
     plt.plot(costs)
