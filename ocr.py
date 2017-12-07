@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
+import config
 from mnist import MNIST
 import numpy as np
 import matplotlib.pyplot as plt
-from ann import HyperParameters, ANN, sigmoid, sigmoid_der, tanh, tanh_der, softmax_generalized, softmax_der
-
+from ann import HyperParameters, ANN
 from featurizer import featurize, one_hot_encoder
-from validator import Validator, Result
+from eval import Evaluator, Result
 
 def load_train():
     mndata = MNIST("./data/mnist/")
@@ -15,13 +15,8 @@ def load_train():
 def convert_prob_to_label(y):
     return np.argmax(y, axis=1).reshape( (len(y), 1) )
 
-def build_model(topology, hyperparams, batch_size, epoch, X_train, Y_train):
-    #ann = ANN(topology, hyperparams, sigmoid, sigmoid_der, sigmoid, sigmoid_der, epoch=epoch)
-    ann = ANN(topology, hyperparams,
-              sigmoid, sigmoid_der,
-              softmax_generalized, softmax_der,
-              epoch=epoch
-            )
+def build_model(topology, config, hyperparams, batch_size, epoch, X_train, Y_train):
+    ann = ANN(topology, config, hyperparams, epoch)
     print("training using mini batch GD...")
     costs = ann.train_in_batch(X_train, Y_train, batch_size)
     return ann, costs
@@ -33,24 +28,14 @@ def evaluate_model(model, num_classes, X_test, Y_test):
     target = np.ravel(target_label)
     predicted = np.ravel(predicted_label)
 
-    validator = Validator(num_classes)
-    accuracy = validator.calculate_accuracy(target, predicted)
-    cm, precisions, recalls = validator.calculate_metrics(target, predicted)
+    evaluator = Evaluator(num_classes)
+    accuracy = evaluator.calculate_accuracy(target, predicted)
+    cm, precisions, recalls = evaluator.calculate_metrics(target, predicted)
     precision = np.mean(precisions)
     recall = np.mean(recalls)
     f1 = 2 * precision * recall / (precision + recall)
 
-    result = {
-        'confusion_matrix': cm,
-        'precision_per_class': precisions,
-        'recall_per_class': recalls,
-        'accuracy': accuracy,
-        'precision': precision,
-        'recall': recall,
-        'f1': f1
-    }
-
-    return result
+    return Result(cm, accuracy, precisions, precision, recalls, recall, f1)
 
 
 def main():
@@ -67,17 +52,21 @@ def main():
 
     X_train = np.array(images[0:train_size] )
     Y_train = np.array(labels[0:train_size] )
+    X_train = X_train/255
     Y_train = one_hot_encoder(Y_train)
 
     X_test = np.array(images[ train_size:N])
+    X_test = X_test/255
     Y_test = np.array(labels[ train_size:N])
     Y_test = one_hot_encoder(Y_test)
 
-    hyperparams = HyperParameters(0.03, 0.01)
-    topology = [X_train[0].shape[0], 300, 10]
-    batch_size = 250
-    epoch = 50
-    model, costs = build_model(topology, hyperparams, batch_size, epoch, X_train, Y_train)
+    hyperparams = HyperParameters(0.03, 0.5)
+    topology = [X_train[0].shape[0], 100, 50, 10]
+    batch_size = 100
+    epoch = 25
+    model, costs = build_model(topology, config.SIGMOID_SOFTMAX_CROSSENTROPY,
+                               hyperparams, batch_size, epoch,
+                               X_train, Y_train)
     plt.plot(costs)
     plt.show()
 

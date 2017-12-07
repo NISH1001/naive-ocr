@@ -3,14 +3,34 @@
 import numpy as np
 
 class Result:
-    def __init__(self, confusion_matrix, accuracy, precision, recall, f1):
+    def __init__(self, confusion_matrix, accuracy,
+                 precision_per_class, precision,
+                 recall_per_class, recall, f1):
         self.confusion_matrix =  confusion_matrix
         self.accuracy = accuracy
+        self.precision_per_class = precision_per_class
         self.precision = precision
         self.recall = recall
+        self.recall_per_class = recall_per_class
         self.f1 = f1
 
-class Validator:
+    def __str__(self):
+        string = "Confusion Matrix ==> {}\nAccuracy ==> {}\n" \
+            + "Precision Per Class ==> {}\nPrecision ==> {}\n" \
+            + "Recall Per Class ==> {}\nRecall ==> {}\n" \
+            + "F1  ==> {}"
+        return string.format(
+                    self.confusion_matrix,
+                    self.accuracy,
+                    self.precision_per_class,
+                    self.precision,
+                    self.recall_per_class,
+                    self.recall_per_class,
+                    self.f1
+                )
+
+
+class Evaluator:
     def __init__(self, num_classes=10):
         self.num_classes = num_classes
 
@@ -42,8 +62,8 @@ class Validator:
 def main():
     t = np.array([1, 3, 2, 1, 3, 4, 0])
     p = np.array([1, 2, 2, 1, 3, 3, 0])
-    validator = Validator(5)
-    cm, precisions, recalls = validator.calculate_metrics(t, p)
+    evaluator = Evaluator(5)
+    cm, precisions, recalls = evaluator.calculate_metrics(t, p)
     print(cm, np.mean(precisions), np.mean(recalls))
 
 if __name__ == "__main__":
