@@ -40,3 +40,5 @@ SIGMOID_LSE = Config(
     lse,
     lse_der
 )
+
+FILE_RESULT = "data/result.json"

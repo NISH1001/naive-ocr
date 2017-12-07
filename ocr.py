@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from ann import HyperParameters, ANN
 from featurizer import featurize, one_hot_encoder
 from eval import Evaluator, Result
+from utils import dump_shit
 
 def load_train():
     mndata = MNIST("./data/mnist/")
@@ -70,15 +71,18 @@ def main():
     plt.plot(costs)
     plt.show()
 
-    result = evaluate_model(model, 10, X_test, Y_test)
+    result_train = evaluate_model(model, 10, X_train, Y_train)
+    print("Train metrics...")
+    print(result_train)
 
-    print("Confusion Matrix ==> {}".format(result['confusion_matrix']))
-    print("Accuracy ==> {}".format(result['accuracy']))
-    print("Precision per class ==> {}".format(result['precision_per_class']))
-    print("Average Precision ==> {}".format(result['precision']))
-    print("Recall per class ==> {}".format(result['recall_per_class']))
-    print("Average Recall ==> {}".format(result['recall']))
-    print("F1 Score ==> {}".format(result['f1']))
+    result_test = evaluate_model(model, 10, X_test, Y_test)
+    print("Test metrics...")
+    print(result_test)
+
+    dump_shit(config.FILE_RESULT, topology, hyperparams,
+              train_size, test_size,
+              batch_size, epoch,
+              result_train, result_test)
 
     while True:
         inp = input("Predict? y/n :: ")

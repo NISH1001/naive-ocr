@@ -25,7 +25,7 @@ class Result:
                     self.precision_per_class,
                     self.precision,
                     self.recall_per_class,
-                    self.recall_per_class,
+                    self.recall,
                     self.f1
                 )
 

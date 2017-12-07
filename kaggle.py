@@ -7,6 +7,7 @@ from ann import HyperParameters
 from ocr  import build_model, evaluate_model, convert_prob_to_label
 from featurizer import featurize, one_hot_encoder
 import matplotlib.pyplot as plt
+from utils import dump_shit
 
 def load_train(filename):
     print("Loading training data...")
@@ -51,6 +52,7 @@ def run():
     X_train = X_train/255
     Y_train = np.array(labels[0 : train_size])
     Y_train = one_hot_encoder(Y_train)
+
     X_eval = np.array(images[train_size:N])
     X_eval = X_eval/255
     Y_eval = np.array(labels[train_size:N])
@@ -69,6 +71,19 @@ def run():
 
     result = evaluate_model(model, 10, X_eval, Y_eval)
     print(result)
+
+    result_train = evaluate_model(model, 10, X_train, Y_train)
+    print("Train metrics...")
+    print(result_train)
+
+    result_test = evaluate_model(model, 10, X_eval, Y_eval)
+    print("Test metrics...")
+    print(result_test)
+
+    dump_shit(config.FILE_RESULT, topology, hyperparams,
+              train_size, eval_size,
+              batch_size, epoch,
+              result_train, result_test)
 
     X_test = load_test("data/test.csv")
     X_test = np.array(X_test)
