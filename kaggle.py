@@ -59,8 +59,8 @@ def run():
     Y_eval = one_hot_encoder(Y_eval)
 
 
-    hyperparams = HyperParameters(0.06, 0.5)
-    topology = [X_train[0].shape[0], 100, 50, 10]
+    hyperparams = HyperParameters(0.06, 0.4)
+    topology = [X_train[0].shape[0], 150, 50, 10]
     batch_size = 100
     epoch = 25
     model, costs = build_model(topology, config.SIGMOID_SOFTMAX_CROSSENTROPY,
@@ -68,9 +68,6 @@ def run():
                                epoch, X_train, Y_train)
     plt.plot(costs)
     plt.show()
-
-    result = evaluate_model(model, 10, X_eval, Y_eval)
-    print(result)
 
     result_train = evaluate_model(model, 10, X_train, Y_train)
     print("Train metrics...")
