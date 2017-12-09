@@ -59,7 +59,7 @@ def run():
     Y_eval = one_hot_encoder(Y_eval)
 
 
-    hyperparams = HyperParameters(0.06, 0.4)
+    hyperparams = HyperParameters(0.05, 0.4)
     topology = [X_train[0].shape[0], 150, 50, 10]
     batch_size = 100
     epoch = 25
