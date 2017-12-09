@@ -5,9 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class HyperParameters:
-    def __init__(self, alpha, momentum=0):
-        self.alpha = alpha
+    def __init__(self, learning_rate, momentum=0, learning_rate_decay=0):
+        self.learning_rate = learning_rate
         self.momentum = momentum
+        self.learning_rate_decay = learning_rate_decay
 
 class ANN:
     """
@@ -22,7 +23,6 @@ class ANN:
         self.config = config
         self.hyperparams = hyperparams
         self.epoch = epoch
-        self.rate_decay = 0.001
         self._init_synapses(topology)
 
     def _init_synapses(self, topology):
@@ -43,10 +43,15 @@ class ANN:
         size = len(X_train_whole)
         costs = []
         for i, k in enumerate(range(0, size, batch_size)):
-            print("Learning rate ==> {}".format(self.hyperparams.alpha))
+            print("Learning rate ==> {}".format(self.hyperparams.learning_rate))
             cost =  self.train(X_train_whole[k : k + batch_size],
                                Y_train_whole[k : k + batch_size])
             print("Batch ==> {} ::: Cost ==> {} ".format(i, cost))
+
+            # decay learning rate after each epoch (mini batch train)
+            alpha = self.hyperparams.learning_rate
+            self.hyperparams.learning_rate = alpha**2 / ( alpha + alpha* self.hyperparams.learning_rate_decay )
+            #self.hyperparams.learning_rate = alpha / (1 + self.hyperparams.learning_rate_decay * i)
             costs.append(cost)
         return costs
 
@@ -65,18 +70,13 @@ class ANN:
             # dw = - eta * gradient_w - momentum * previous_dw
             # w += dw
             for i, synapse in enumerate(self.synapses):
-                self.delta_synapses[i] = -1/n * self.hyperparams.alpha * grad_synapses[i] \
-                    - self.hyperparams.momentum * self.delta_synapses[i]
-                self.delta_biases[i] = -1/n * self.hyperparams.alpha * np.sum(grad_biases[i], axis=0) \
-                     - self.hyperparams.momentum * self.delta_biases[i]
+                self.delta_synapses[i] = -1/n * self.hyperparams.learning_rate * grad_synapses[i] \
+                    + self.hyperparams.momentum * self.delta_synapses[i]
+                self.delta_biases[i] = -1/n * self.hyperparams.learning_rate * np.sum(grad_biases[i], axis=0) \
+                     + self.hyperparams.momentum * self.delta_biases[i]
                 self.synapses[i] = synapse + self.delta_synapses[i]
                 self.biases[i] = self.biases[i] + self.delta_biases[i]
             costs.append(cost)
-
-        # learning rate decay
-        alpha = self.hyperparams.alpha
-        alpha = alpha**2 / ( alpha + alpha* self.rate_decay )
-        self.hyperparams.alpha = alpha
 
         return np.mean(costs)
 

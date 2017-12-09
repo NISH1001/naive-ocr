@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import numpy as np
 
 class Result:
@@ -58,6 +59,7 @@ class Evaluator:
             recalls[i] = 0 if r_denom == 0 else tp[i]/r_denom
 
         return cm, precisions, recalls
+
 
 def main():
     t = np.array([1, 3, 2, 1, 3, 4, 0])

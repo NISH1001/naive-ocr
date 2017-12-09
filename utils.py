@@ -6,6 +6,7 @@
 
 import config
 import json
+import matplotlib.pyplot as plt
 
 def dump_shit(filename, topology, hyperparams, train_size, test_size,
               batch_size, epoch, result_train, result_test):
@@ -37,7 +38,7 @@ def dump_shit(filename, topology, hyperparams, train_size, test_size,
     } if result_test else {}
 
     to_dump['topology'] = topology if topology else []
-    to_dump['hyperparams'] = [hyperparams.alpha, hyperparams.momentum] if hyperparams else []
+    to_dump['hyperparams'] = [hyperparams.learning_rate, hyperparams.momentum] if hyperparams else []
     to_dump['batch_size'] = batch_size if batch_size else -1
     to_dump['epoch'] = epoch if epoch else -1
     to_dump['train'] = train
@@ -48,11 +49,26 @@ def dump_shit(filename, topology, hyperparams, train_size, test_size,
     with open(filename, 'w') as f:
          json.dump(data, f, indent=4)
 
+def plot_metrics(filename):
+    accuracies_test = []
+    accuracies_train = []
+    with open(filename, 'r') as f:
+        results = json.loads(f.read())
+        print(len(results))
+        for data in results:
+            accuracies_train.append(data['train']['accuracy'])
+            accuracies_test.append(data['test']['accuracy'])
+
+    plt.plot(accuracies_train, color='b', label="Training Accuracy")
+    plt.plot(accuracies_test, color='r', label="Test/Validation Accuracy")
+    plt.legend()
+    plt.show()
+
 
 def main():
     #dump_shit(config.FILE_RESULT, 1,1,1,1,1,1)
     #dump_shit("data/result.json", None, None, None, None, None, None, None, None)
-    pass
+    plot_metrics(config.FILE_RESULT)
 
 
 if __name__ == "__main__":

@@ -39,5 +39,5 @@ To test the ocr, you have to put a **.jpg** image inside data/ as **test.jpg**.
 
 The script tries to test the image from the path **data/test.jpg** accordingly.
 
-
-
+## Training Result So Far
+![Accuracy Plot](accuracies.jpeg)

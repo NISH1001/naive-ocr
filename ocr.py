@@ -61,7 +61,8 @@ def main():
     Y_test = np.array(labels[ train_size:N])
     Y_test = one_hot_encoder(Y_test)
 
-    hyperparams = HyperParameters(0.03, 0.5)
+    # lr, m, lr-decay
+    hyperparams = HyperParameters(0.05, 0.4, 0.001)
     topology = [X_train[0].shape[0], 100, 50, 10]
     batch_size = 100
     epoch = 25
