@@ -60,9 +60,9 @@ def run():
 
 
     # lr, m, lr-decay
-    hyperparams = HyperParameters(0.03, 0.6, 0.001)
-    topology = [X_train[0].shape[0], 100, 50, 25, 10]
-    batch_size = 75
+    hyperparams = HyperParameters(0.003, 0.9, 0.001)
+    topology = [X_train[0].shape[0], 120, 50, 10]
+    batch_size = 100
     epoch = 25
     model, costs = build_model(topology, config.SIGMOID_SOFTMAX_CROSSENTROPY,
                                hyperparams, batch_size,

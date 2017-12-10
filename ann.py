@@ -62,20 +62,33 @@ class ANN:
         n = len(X_train)
         costs = []
 
+        mu = self.hyperparams.momentum
+        lr = self.hyperparams.learning_rate
+
         for i in range(self.epoch):
             Z, cache_y, cache_z = self.feed_forward(X_train)
             cache_z = [X_train] + cache_z
             grad_synapses, grad_biases, cost = self.backpropagate(Y_train, cache_y, cache_z)
 
-            # dw = - eta * gradient_w - momentum * previous_dw
+            # dw = - lr * gradient_w + mu * previous_dw => standard momentum
             # w += dw
+            # Also, v_prev = v
+            # v = mu * v - lr * grad
+            # w += -mu * v_prev + (1+mu) * v => Neterov Momentum => mostly used
+            #
             for i, synapse in enumerate(self.synapses):
-                self.delta_synapses[i] = -1/n * self.hyperparams.learning_rate * grad_synapses[i] \
-                    + self.hyperparams.momentum * self.delta_synapses[i]
-                self.delta_biases[i] = -1/n * self.hyperparams.learning_rate * np.sum(grad_biases[i], axis=0) \
-                     + self.hyperparams.momentum * self.delta_biases[i]
-                self.synapses[i] = synapse + self.delta_synapses[i]
-                self.biases[i] = self.biases[i] + self.delta_biases[i]
+                delta_synapses_prev = self.delta_synapses[i][:]
+                delta_biases_prev = self.delta_biases[i][:]
+                self.delta_synapses[i] = -1/n * lr * grad_synapses[i] \
+                    + mu * self.delta_synapses[i]
+                self.delta_biases[i] = -1/n * lr * np.sum(grad_biases[i], axis=0) \
+                     + mu * self.delta_biases[i]
+                self.synapses[i] = synapse \
+                            + (1 + mu) * self.delta_synapses[i] \
+                            - mu * delta_synapses_prev
+                self.biases[i] = self.biases[i] \
+                            + (1 + mu) * self.delta_biases[i] \
+                            - mu * delta_biases_prev
             costs.append(cost)
 
         return np.mean(costs)
