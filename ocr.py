@@ -46,10 +46,12 @@ def main():
     train_size = 50000
     test_size = N-train_size
 
+    """
     print("shuffling...")
     dataset = list(zip(images, labels))
     np.random.shuffle(dataset)
     images, labels = zip(*dataset)
+    """
 
     X_train = np.array(images[0:train_size] )
     Y_train = np.array(labels[0:train_size] )
@@ -62,9 +64,9 @@ def main():
     Y_test = one_hot_encoder(Y_test)
 
     # lr, m, lr-decay
-    hyperparams = HyperParameters(0.002, 0.9, 0.001)
-    topology = [X_train[0].shape[0], 100, 50, 10]
-    batch_size = 75
+    hyperparams = HyperParameters(0.02, 0.8, 0.00001)
+    topology = [X_train[0].shape[0], 30, 10]
+    batch_size = 50
     epoch = 25
     model, costs = build_model(topology, config.SIGMOID_SOFTMAX_CROSSENTROPY,
                                hyperparams, batch_size, epoch,

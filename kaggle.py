@@ -40,13 +40,15 @@ def load_test(filename):
 def run():
     images, labels = load_train("data/train.csv")
     N = len(images)
-    train_size = 41000
+    train_size = 35000
     eval_size = N-train_size
 
+    """
     print("shuffling...")
     dataset = list(zip(images, labels))
     np.random.shuffle(dataset)
     images, labels = zip(*dataset)
+    """
 
     X_train = np.array(images[0 : train_size])
     X_train = X_train/255
@@ -60,10 +62,10 @@ def run():
 
 
     # lr, m, lr-decay
-    hyperparams = HyperParameters(0.003, 0.9, 0.001)
-    topology = [X_train[0].shape[0], 120, 50, 10]
-    batch_size = 100
-    epoch = 25
+    hyperparams = HyperParameters(0.1, 0.5, 0.000001)
+    topology = [X_train[0].shape[0], 50, 10]
+    batch_size = 50
+    epoch = 50
     model, costs = build_model(topology, config.SIGMOID_SOFTMAX_CROSSENTROPY,
                                hyperparams, batch_size,
                                epoch, X_train, Y_train)

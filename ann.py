@@ -42,17 +42,29 @@ class ANN:
         """
         size = len(X_train_whole)
         costs = []
-        for i, k in enumerate(range(0, size, batch_size)):
-            print("Learning rate ==> {}".format(self.hyperparams.learning_rate))
-            cost =  self.train(X_train_whole[k : k + batch_size],
-                               Y_train_whole[k : k + batch_size])
-            print("Batch ==> {} ::: Cost ==> {} ".format(i, cost))
+        for j in range(self.epoch):
+            costs_epoch = []
+            print("Epoch ==> {}".format(j))
+            print("shuffling...")
+            dataset = list(zip(X_train_whole, Y_train_whole))
+            np.random.shuffle(dataset)
+            X_train_whole, Y_train_whole = zip(*dataset)
+            X_train_whole = np.array(X_train_whole)
+            Y_train_whole = np.array(Y_train_whole)
 
+            print("Learning rate ==> {}".format(self.hyperparams.learning_rate))
+            for i, k in enumerate(range(0, size, batch_size)):
+                cost =  self.train(X_train_whole[k : k + batch_size],
+                                Y_train_whole[k : k + batch_size])
+                costs_epoch.append(cost)
+
+            cost = np.mean(costs_epoch)
+            print("Cost ==> {} ".format(cost))
+            costs.append(cost)
             # decay learning rate after each epoch (mini batch train)
             alpha = self.hyperparams.learning_rate
-            self.hyperparams.learning_rate = alpha**2 / ( alpha + alpha* self.hyperparams.learning_rate_decay )
-            #self.hyperparams.learning_rate = alpha / (1 + self.hyperparams.learning_rate_decay * i)
-            costs.append(cost)
+            #self.hyperparams.learning_rate = alpha**2 / ( alpha + alpha* self.hyperparams.learning_rate_decay )
+            self.hyperparams.learning_rate = alpha / (1 + self.hyperparams.learning_rate_decay * j)
         return costs
 
     def train(self, X_train, Y_train):
@@ -60,38 +72,34 @@ class ANN:
             mini-batch training
         """
         n = len(X_train)
-        costs = []
 
         mu = self.hyperparams.momentum
         lr = self.hyperparams.learning_rate
 
-        for i in range(self.epoch):
-            Z, cache_y, cache_z = self.feed_forward(X_train)
-            cache_z = [X_train] + cache_z
-            grad_synapses, grad_biases, cost = self.backpropagate(Y_train, cache_y, cache_z)
+        Z, cache_y, cache_z = self.feed_forward(X_train)
+        cache_z = [X_train] + cache_z
+        grad_synapses, grad_biases, cost = self.backpropagate(Y_train, cache_y, cache_z)
 
-            # dw = - lr * gradient_w + mu * previous_dw => standard momentum
-            # w += dw
-            # Also, v_prev = v
-            # v = mu * v - lr * grad
-            # w += -mu * v_prev + (1+mu) * v => Neterov Momentum => mostly used
-            #
-            for i, synapse in enumerate(self.synapses):
-                delta_synapses_prev = self.delta_synapses[i][:]
-                delta_biases_prev = self.delta_biases[i][:]
-                self.delta_synapses[i] = -1/n * lr * grad_synapses[i] \
-                    + mu * self.delta_synapses[i]
-                self.delta_biases[i] = -1/n * lr * np.sum(grad_biases[i], axis=0) \
-                     + mu * self.delta_biases[i]
-                self.synapses[i] = synapse \
-                            + (1 + mu) * self.delta_synapses[i] \
-                            - mu * delta_synapses_prev
-                self.biases[i] = self.biases[i] \
-                            + (1 + mu) * self.delta_biases[i] \
-                            - mu * delta_biases_prev
-            costs.append(cost)
-
-        return np.mean(costs)
+        # dw = - lr * gradient_w + mu * previous_dw => standard momentum
+        # w += dw
+        # Also, v_prev = v
+        # v = mu * v - lr * grad
+        # w += -mu * v_prev + (1+mu) * v => Neterov Momentum => mostly used
+        #
+        for i, synapse in enumerate(self.synapses):
+            delta_synapses_prev = self.delta_synapses[i][:]
+            delta_biases_prev = self.delta_biases[i][:]
+            self.delta_synapses[i] = -1/n * lr * grad_synapses[i] \
+                + mu * self.delta_synapses[i]
+            self.delta_biases[i] = -1/n * lr * np.sum(grad_biases[i], axis=0) \
+                    + mu * self.delta_biases[i]
+            self.synapses[i] = synapse \
+                        + (1 + mu) * self.delta_synapses[i] \
+                        - mu * delta_synapses_prev
+            self.biases[i] = self.biases[i] \
+                        + (1 + mu) * self.delta_biases[i] \
+                        - mu * delta_biases_prev
+        return cost
 
     def predict(self, X):
         Z, cache_y, cache_z = self.feed_forward(X)
