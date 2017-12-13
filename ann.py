@@ -3,6 +3,33 @@
 import config
 import matplotlib.pyplot as plt
 import numpy as np
+from eval import Evaluator, Result
+
+fig = plt.gcf()
+fig.show()
+fig.canvas.draw()
+
+def convert_prob_to_label(y):
+    return np.argmax(y, axis=1).reshape( (len(y), 1) )
+
+def evaluate_model(model, num_classes, X_test, Y_test):
+    predicted = model.predict(X_test)
+    target_label = convert_prob_to_label(Y_test)
+    predicted_label = convert_prob_to_label(predicted)
+    target = np.ravel(target_label)
+    predicted = np.ravel(predicted_label)
+
+    evaluator = Evaluator(num_classes)
+    accuracy = evaluator.calculate_accuracy(target, predicted)
+    cm, precisions, recalls = evaluator.calculate_metrics(target, predicted)
+    precision = np.mean(precisions)
+    recall = np.mean(recalls)
+    if precision > 1e-3 and recall > 1e-3:
+        f1 = 2 * precision * recall / (precision + recall)
+    else:
+        f1 = 0.0
+
+    return Result(cm, accuracy, precisions, precision, recalls, recall, f1)
 
 class HyperParameters:
     def __init__(self, learning_rate, momentum=0, learning_rate_decay=0, reg_param=0):
@@ -41,27 +68,48 @@ class ANN:
             The entry point for training the ann.
             It slices the whole training set into batches.
         """
-        size = len(X_train_whole)
         costs = []
+        accuracies_train = []
+        accuracies_test = []
+        N = len(X_train_whole)
+        train_size = 50000
+        test_size = 10000
+        X_test = np.array(X_train_whole[train_size:train_size+test_size])
+        Y_test = np.array(Y_train_whole[train_size:train_size+test_size])
         for j in range(self.epoch):
             costs_epoch = []
             print("Epoch ==> {}".format(j))
             print("shuffling...")
-            dataset = list(zip(X_train_whole, Y_train_whole))
+            dataset = list(zip(X_train_whole[:train_size], Y_train_whole[:train_size]))
             np.random.shuffle(dataset)
             X_train_whole, Y_train_whole = zip(*dataset)
-            X_train_whole = np.array(X_train_whole)
-            Y_train_whole = np.array(Y_train_whole)
+            X_train = np.array(X_train_whole)
+            Y_train = np.array(Y_train_whole)
+            size = len(X_train)
 
             print("Learning rate ==> {}".format(self.hyperparams.learning_rate))
             for i, k in enumerate(range(0, size, batch_size)):
-                cost =  self.train(X_train_whole[k : k + batch_size],
-                                Y_train_whole[k : k + batch_size])
+                cost =  self.train(X_train[k : k + batch_size],
+                                Y_train[k : k + batch_size])
                 costs_epoch.append(cost)
 
             cost = np.mean(costs_epoch)
             print("Cost ==> {} ".format(cost))
             costs.append(cost)
+
+            result = evaluate_model(self, 10, X_train, Y_train)
+            accuracies_train.append(result.accuracy*100)
+            print("Train Accuracy ==> {}".format(result.accuracy*100))
+
+            result = evaluate_model(self, 10, X_test, Y_test)
+            accuracies_test.append(result.accuracy*100)
+            print("Test Accuracy ==> {}".format(result.accuracy*100))
+
+            #plt.plot(costs, color='r', label='Cost')
+            plt.plot(accuracies_train, color='g', label='Train Accuracy')
+            plt.plot(accuracies_test, color='b', label='Test Accuracy')
+            fig.canvas.show()
+
             # decay learning rate after each epoch (mini batch train)
             alpha = self.hyperparams.learning_rate
             #self.hyperparams.learning_rate = alpha**2 / ( alpha + alpha* self.hyperparams.learning_rate_decay )
