@@ -38,7 +38,9 @@ def dump_shit(filename, topology, hyperparams, train_size, test_size,
     } if result_test else {}
 
     to_dump['topology'] = topology if topology else []
-    to_dump['hyperparams'] = [hyperparams.learning_rate, hyperparams.momentum] if hyperparams else []
+    to_dump['hyperparams'] = [hyperparams.learning_rate, hyperparams.momentum, hyperparams.reg_param] \
+        if hyperparams \
+        else []
     to_dump['batch_size'] = batch_size if batch_size else -1
     to_dump['epoch'] = epoch if epoch else -1
     to_dump['train'] = train

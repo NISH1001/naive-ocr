@@ -64,10 +64,10 @@ def main():
     Y_test = one_hot_encoder(Y_test)
 
     # lr, m, lr-decay
-    hyperparams = HyperParameters(0.02, 0.8, 0.00001)
+    hyperparams = HyperParameters(0.02, 0.8, 0.00001, 0.1)
     topology = [X_train[0].shape[0], 30, 10]
-    batch_size = 50
-    epoch = 25
+    batch_size = 25
+    epoch = 30
     model, costs = build_model(topology, config.SIGMOID_SOFTMAX_CROSSENTROPY,
                                hyperparams, batch_size, epoch,
                                X_train, Y_train)

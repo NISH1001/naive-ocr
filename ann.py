@@ -5,10 +5,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class HyperParameters:
-    def __init__(self, learning_rate, momentum=0, learning_rate_decay=0):
+    def __init__(self, learning_rate, momentum=0, learning_rate_decay=0, reg_param=0):
         self.learning_rate = learning_rate
         self.momentum = momentum
         self.learning_rate_decay = learning_rate_decay
+        self.reg_param = reg_param
 
 class ANN:
     """
@@ -93,7 +94,7 @@ class ANN:
                 + mu * self.delta_synapses[i]
             self.delta_biases[i] = -1/n * lr * np.sum(grad_biases[i], axis=0) \
                     + mu * self.delta_biases[i]
-            self.synapses[i] = synapse \
+            self.synapses[i] = (1 - lr*self.hyperparams.reg_param/n) * synapse \
                         + (1 + mu) * self.delta_synapses[i] \
                         - mu * delta_synapses_prev
             self.biases[i] = self.biases[i] \
@@ -168,6 +169,11 @@ class ANN:
         return self.config.cost_func_der(target, predicted)
 
     def calculate_cost(self, target, predicted):
+        reg_cost = 1/len(target) \
+            * self.hyperparams.reg_param \
+            * np.sum([ np.sum(synapse**2) for synapse in self.synapses ]) \
+            if self.hyperparams.reg_param \
+            else 0
         return self.config.cost_func(target,predicted)
 
 def test_ann():
