@@ -40,7 +40,7 @@ def load_test(filename):
 def run():
     images, labels = load_train("data/train.csv")
     N = len(images)
-    train_size = 35000
+    train_size = 38000
     eval_size = N-train_size
 
     """
@@ -62,10 +62,10 @@ def run():
 
 
     # lr, m, lr-decay
-    hyperparams = HyperParameters(0.1, 0.5, 0.000001)
-    topology = [X_train[0].shape[0], 50, 10]
-    batch_size = 50
-    epoch = 50
+    hyperparams = HyperParameters(0.2, 0.5, 0.000001, 0.01)
+    topology = [X_train[0].shape[0], 100, 50, 10]
+    batch_size = 20
+    epoch = 60
     model, costs = build_model(topology, config.SIGMOID_SOFTMAX_CROSSENTROPY,
                                hyperparams, batch_size,
                                epoch, X_train, Y_train)
